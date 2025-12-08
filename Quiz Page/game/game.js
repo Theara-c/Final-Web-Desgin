@@ -79,10 +79,21 @@ const questions = [
     ],
     correct: 1,
   },
+  {
+    question: "Which HTML tag is used to display an image?",
+    choices: ["<img>", "<image>", "<src>", "<picture>"],
+    correct: 0,
+  },
+  {
+    question: "What does the 'a' tag in HTML define?",
+    choices: ["A paragraph", "A link", "An image", "A list"],
+    correct: 1,
+  },
 ];
 
 let currentQuestionIndex = 0;
 let answeredCorrectly = false;
+let score = 0;
 
 function loadQuestion() {
   const current = questions[currentQuestionIndex];
@@ -97,13 +108,12 @@ function loadQuestion() {
   current.choices.forEach((choice, index) => {
     const choiceDiv = document.createElement("div");
     choiceDiv.className = "choice-container";
+    // Escape HTML special characters in choice text
+    const escapeHTML = (str) => str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     choiceDiv.innerHTML = `
-                    <p class="choice-prefix">${String.fromCharCode(
-                      65 + index
-                    )}</p>
-                    <p class="choice-text">${choice}</p>
-                `;
-
+      <p class="choice-prefix">${String.fromCharCode(65 + index)}</p>
+      <p class="choice-text">${escapeHTML(choice)}</p>
+    `;
     choiceDiv.addEventListener("click", () => selectAnswer(index, choiceDiv));
     choicesContainer.appendChild(choiceDiv);
   });
@@ -125,10 +135,15 @@ function selectAnswer(selectedIndex, element) {
   if (isCorrect) {
     element.classList.add("correct");
     answeredCorrectly = true;
+    score++;
   } else {
     element.classList.add("wrong");
-    // Show the correct answer
-    allChoices[current.correct].classList.add("correct");
+    // Show the correct answer robustly
+    allChoices.forEach((choice, idx) => {
+      if (idx === current.correct) {
+        choice.classList.add("correct");
+      }
+    });
   }
 
   document.getElementById("nextBtn").style.display = "block";
@@ -146,12 +161,13 @@ function nextQuestion() {
 function showQuizComplete() {
   const questionContainer = document.querySelector(".question-container");
   questionContainer.innerHTML = `
-                <div class="quiz-complete">
-                    <h2>Quiz Complete!</h2>
-                    <p>You answered all 10 questions.</p>
-                    <button class="next-btn" onclick="location.reload()">Restart Quiz</button>
-                </div>
-            `;
+          <div class="quiz-complete">
+            <h2>Quiz Complete!</h2>
+            <p>You answered all ${questions.length} questions.</p>
+            <p>Your score: <strong>${score} / ${questions.length}</strong></p>
+            <button class="next-btn" onclick="location.reload()">Restart Quiz</button>
+          </div>
+        `;
 }
 
 document.getElementById("nextBtn").addEventListener("click", nextQuestion);
